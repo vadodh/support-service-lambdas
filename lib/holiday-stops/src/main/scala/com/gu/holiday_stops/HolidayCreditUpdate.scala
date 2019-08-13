@@ -1,6 +1,8 @@
-package com.gu.holidaystopprocessor
+package com.gu.holiday_stops
 
 import java.time.LocalDate
+
+import com.gu.holiday_stops
 
 case class HolidayCreditUpdate(
   currentTerm: Option[Int],
@@ -24,7 +26,7 @@ object HolidayCreditUpdate {
     holidayCredit: Double
   ): Either[ZuoraHolidayWriteError, HolidayCreditUpdate] = {
     Right(
-      HolidayCreditUpdate(
+      holiday_stops.HolidayCreditUpdate(
         currentTerm = maybeExtendedTerm.map(_.length),
         currentTermPeriodType = maybeExtendedTerm.map(_.unit),
         List(
