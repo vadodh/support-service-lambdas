@@ -56,13 +56,14 @@ object Handler extends Logging {
       sfAuthConfig <- loadConfig[SFAuthConfig].toApiGatewayOp("load sfAuth config")
       sfClient <- SalesforceClient(response, sfAuthConfig).value.toDisjunction.toApiGatewayOp("authenticate with SalesForce")
     } yield Operation.noHealthcheck( // checking connectivity to SF is sufficient healthcheck so no special steps required
-      request => (request.httpMethod match { // TODO will need to match against path params too to support edit endpoint
-        case Some("GET") => request.queryStringParameters match {
-          case Some(_) => stepsForPotentialHolidayStop _
-          case None => stepsToListExisting _
-        }
-        case Some("POST") => stepsToCreate _
-        case Some("DELETE") => stepsToDelete _
+      request => ((request.httpMethod,
+                   request.queryStringParameters,
+                   request.headers.flatMap(_.get("API_ENDPOINT_VERSION"))) match { // TODO will need to match against path params too to support edit endpoint
+        case (Some("GET"), Some(_), Some("2.0")) => stepsForPotentialHolidayStopV2 _
+        case (Some("GET"), Some(_), _) => stepsForPotentialHolidayStopV1 _
+        case (Some("GET"), None, _) => stepsToListExisting _
+        case (Some("POST"), _, _) => stepsToCreate _
+        case (Some("DELETE"), _, _) => stepsToDelete _
         case _ => unsupported _
       })(request, sfClient))
 
@@ -71,16 +72,36 @@ object Handler extends Logging {
   private val HEADER_IDENTITY_ID = "x-identity-id"
   private val HEADER_PRODUCT_NAME_PREFIX = "x-product-name-prefix"
 
-  case class PotentialHolidayStopParams(startDate: LocalDate, endDate: LocalDate)
-  def stepsForPotentialHolidayStop(req: ApiGatewayRequest, unused: SfClient): ApiResponse = {
+  case class PotentialHolidayStopParamsV1(startDate: LocalDate, endDate: LocalDate)
+  def stepsForPotentialHolidayStopV1(req: ApiGatewayRequest, unused: SfClient): ApiResponse = {
     implicit val formatLocalDateAsSalesforceDate: Format[LocalDate] = SalesforceHolidayStopRequest.formatLocalDateAsSalesforceDate
-    implicit val readsPotentialHolidayStopParams: Reads[PotentialHolidayStopParams] = Json.reads[PotentialHolidayStopParams]
+    implicit val readsPotentialHolidayStopParams: Reads[PotentialHolidayStopParamsV1] = Json.reads[PotentialHolidayStopParamsV1]
     (for {
       productNamePrefix <- req.headers.flatMap(_.get(HEADER_PRODUCT_NAME_PREFIX)).toApiGatewayOp("identityID header")
-      params <- req.queryParamsAsCaseClass[PotentialHolidayStopParams]()
+      params <- req.queryParamsAsCaseClass[PotentialHolidayStopParamsV1]()
     } yield ApiGatewayResponse(
       "200",
       ActionCalculator.publicationDatesToBeStopped(params.startDate, params.endDate, ProductName(productNamePrefix))
+    )).apiResponse
+  }
+
+  case class PotentialHolidayStopsAffectedIssue(issueDate: LocalDate, estimatedPrice: Double)
+  case class PotentialHolidayStopsResponse(affectedIssues: List[PotentialHolidayStopsAffectedIssue])
+  case class PotentialHolidayStopParamsV2(startDate: LocalDate, endDate: LocalDate)
+  def stepsForPotentialHolidayStopV2(req: ApiGatewayRequest, unused: SfClient): ApiResponse = {
+    implicit val formatLocalDateAsSalesforceDate: Format[LocalDate] = SalesforceHolidayStopRequest.formatLocalDateAsSalesforceDate
+    implicit val formatPotentialHolidayStopsAffectedIssue: Format[PotentialHolidayStopsAffectedIssue] = Json.format[PotentialHolidayStopsAffectedIssue]
+    implicit val formatPotentialHolidayStopsResponse: Format[PotentialHolidayStopsResponse] = Json.format[PotentialHolidayStopsResponse]
+    implicit val readsPotentialHolidayStopParams: Reads[PotentialHolidayStopParamsV2] = Json.reads[PotentialHolidayStopParamsV2]
+    (for {
+      productNamePrefix <- req.headers.flatMap(_.get(HEADER_PRODUCT_NAME_PREFIX)).toApiGatewayOp("identityID header")
+      params <- req.queryParamsAsCaseClass[PotentialHolidayStopParamsV2]()
+    } yield ApiGatewayResponse(
+      "200",
+      PotentialHolidayStopsResponse(
+        ActionCalculator.publicationDatesToBeStopped(params.startDate, params.endDate, ProductName(productNamePrefix))
+                        .map(PotentialHolidayStopsAffectedIssue(_, 1.23))
+      )
     )).apiResponse
   }
 
