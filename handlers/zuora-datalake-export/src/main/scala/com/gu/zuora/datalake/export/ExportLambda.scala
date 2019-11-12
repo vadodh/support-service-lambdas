@@ -184,8 +184,8 @@ object Query extends Enum[Query] {
   )
   case object Invoice extends Query(
     "Invoice",
-    "SELECT AdjustmentAmount, Amount, AmountWithoutTax, AutoPay, Balance, Comments, CreatedByID, CreatedDate, CreditBalanceAdjustmentAmount, DueDate, IncludesOneTime, IncludesRecurring, IncludesUsage, InvoiceDate, InvoiceNumber, LastEmailSentDate, PaymentAmount, PostedBy, PostedDate, RefundAmount, Source, SourceID, Status, TargetDate, TaxAmount, TaxExemptAmount, TransferredToAccounting, UpdatedByID, UpdatedDate, ID, Account.ID FROM Invoice",
-    "ophan-raw-zuora-increment-invoice",
+    "SELECT AdjustmentAmount, Amount, AmountWithoutTax, AutoPay, Balance, Comments, CreatedByID, CreatedDate, CreditBalanceAdjustmentAmount, DueDate, IncludesOneTime, IncludesRecurring, IncludesUsage, InvoiceDate, InvoiceNumber, LastEmailSentDate, PaymentAmount, PostedBy, PostedDate, RefundAmount, Source, SourceID, Status, TargetDate, TaxAmount, TaxExemptAmount, TransferredToAccounting, UpdatedByID, UpdatedDate, ID, Account.ID, BillToContact.ID, BillToContactSnapShot.ID, DefaultPaymentMethod.ID, ParentAccount.ID, SoldToContact.ID, SoldToContactSnapshot.ID FROM Invoice",
+    "ophan-raw-zuora-increment-invoice",                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        1
     "Invoice.csv"
   )
   case object Payment extends Query(
