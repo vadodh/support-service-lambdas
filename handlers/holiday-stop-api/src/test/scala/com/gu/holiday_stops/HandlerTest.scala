@@ -242,7 +242,8 @@ class HandlerTest extends FlatSpec with Matchers {
   "POST /hsr/<<sub name>>/cancel?effectiveCancelationDate=yy-MM-dd endpoint" should
     "update holiday stops detail for cancellation" in {
 
-    val effectiveCancellationDate = LocalDate.of(2019,10,1)
+    val gwSubscription = Fixtures.subscriptionFromJson("GuardianWeeklyWith6For6.json")
+    val effectiveCancellationDate = LocalDate.of(2019,12,1)
     val subscriptionName = "Sub12344"
     val contactId = "Contact1234"
     val price = 1.23
@@ -254,6 +255,8 @@ class HandlerTest extends FlatSpec with Matchers {
 
     val testBackend = SttpBackendStub
       .synchronous
+      .stubZuoraAuthCall()
+      .stubZuoraSubscription(subscriptionName, gwSubscription)
 
     val holidayStopRequest = Fixtures.mkHolidayStopRequest(
       id = "holidayStopId",
@@ -296,7 +299,8 @@ class HandlerTest extends FlatSpec with Matchers {
   "GET /hsr/<<sub name>>/cancel?effectiveCancelationDate=yy-MM-dd endpoint" should
     "get holiday stop details that should be refunded if the subscription is canceled" in {
 
-    val effectiveCancellationDate = LocalDate.of(2019,10,1)
+    val gwSubscription = Fixtures.subscriptionFromJson("GuardianWeeklyWith6For6.json")
+    val effectiveCancellationDate = LocalDate.of(2019,12,1)
     val subscriptionName = "Sub12344"
     val contactId = "Contact1234"
     val price = 1.23
@@ -312,6 +316,8 @@ class HandlerTest extends FlatSpec with Matchers {
 
     val testBackend = SttpBackendStub
       .synchronous
+      .stubZuoraAuthCall()
+      .stubZuoraSubscription(subscriptionName, gwSubscription)
 
     val holidayStopRequest = Fixtures.mkHolidayStopRequest(
       id = "holidayStopId",

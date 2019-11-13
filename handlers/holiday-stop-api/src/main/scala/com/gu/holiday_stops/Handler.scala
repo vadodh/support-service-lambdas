@@ -266,10 +266,13 @@ object Handler extends Logging {
         .toApiGatewayOp(
           s"lookup Holiday Stop Requests for contact $contact and subscription ${pathParams.subscriptionName}"
         )
-      holidayStopRequestDetailToUpdate = HolidayStopSubscriptionCancellation(
+      subscription <- getSubscription(pathParams.subscriptionName)
+        .toApiGatewayOp(s"get subscription ${pathParams.subscriptionName}")
+      holidayStopRequestDetailToUpdate <- HolidayStopSubscriptionCancellation(
         effectiveCancellationDate,
-        holidayStopRequests
-      )
+        holidayStopRequests,
+        subscription
+      ).toApiGatewayOp(s"calculate holiday holiday stops that should be canceled")
       cancelBody = CancelHolidayStopRequestDetail.buildBody(holidayStopRequestDetailToUpdate, idGenerator)
       _ <- updateRequestDetailOp(cancelBody)
         .toDisjunction
@@ -300,10 +303,13 @@ object Handler extends Logging {
         .toApiGatewayOp(
           s"lookup Holiday Stop Requests for contact $contact and subscription ${pathParams.subscriptionName}"
         )
-      holidayStopRequestDetailToRefund = HolidayStopSubscriptionCancellation(
+      subscription <- getSubscription(pathParams.subscriptionName)
+        .toApiGatewayOp(s"get subscription ${pathParams.subscriptionName}")
+      holidayStopRequestDetailToRefund <- HolidayStopSubscriptionCancellation(
         effectiveCancellationDate,
-        holidayStopRequests
-      )
+        holidayStopRequests,
+        subscription
+      ).toApiGatewayOp(s"calculate holiday holiday stops that should be canceled")
 
       response = GetCancellationDetails(holidayStopRequestDetailToRefund.map(toHolidayStopRequestDetail))
     } yield ApiGatewayResponse("200", response)).apiResponse
