@@ -44,14 +44,12 @@ object DeliveryRecordsApiApp extends LazyLogging {
 
   private def loadSalesforceConfig(): EitherT[IO, DeliveryRecordsApiAppError, SFAuthConfig] = {
     ConfigLoader
-      .loadFileFromS3[IO, SFAuthConfig](bucket, stage, salesforceConfigLocation)
-      .leftMap(error => DeliveryRecordsApiAppError(error.toString()))
+      .loadFileFromS3[IO, SFAuthConfig](bucket, stage, SFAuthConfig.location)
+      .leftMap(error => DeliveryRecordsApiAppError(error.toString))
   }
 
   private lazy val stage: Stage =
     Stage(Option(System.getenv("Stage")).filter(_ != "").getOrElse("DEV"))
 
   private val bucket = "gu-reader-revenue-private"
-
-  private val salesforceConfigLocation = ConfigLocation[SFAuthConfig]("sfAuth", 1)
 }
