@@ -10,12 +10,8 @@ import com.gu.holiday_stops._
 
 
 object Processor {
-  def processAllProducts(config: Config, processDateOverride: Option[LocalDate], backend: SttpBackend[Id, Nothing]): List[ProcessResult] =
-    Zuora.accessTokenGetResponse(config.zuoraConfig, backend) match {
-      case Left(err) =>
-        List(ProcessResult(Nil, Nil, Nil, Some(OverallFailure(err.reason))))
 
-      case Right(zuoraAccessToken) =>
+  def processAllProducts(config: Config, processDateOverride: Option[LocalDate], backend: SttpBackend[Id, Nothing]): List[ProcessResult] =
         List(
           GuardianWeekly,
           SaturdayVoucher,
@@ -29,15 +25,15 @@ object Processor {
           SundayPlusVoucher,
           SaturdayPlusVoucher,
         )
-          .map(productVariant => processProduct(config, Salesforce.holidayStopRequests(config.sfConfig)(productVariant, processDateOverride), _, _, _))
-          .map{
-            _.apply(
-              Zuora.subscriptionGetResponse(config, zuoraAccessToken, backend),
-              Zuora.subscriptionUpdateResponse(config, zuoraAccessToken, backend),
+          .map { productVariant =>
+            processProduct(
+              config,
+              Salesforce.holidayStopRequests(config.sfConfig)(productVariant, processDateOverride),
+              ZuoraZioAdapter.getSubscription,
+              ZuoraZioAdapter.updateSubscription,
               Salesforce.holidayStopUpdateResponse(config.sfConfig)
             )
           }
-    }
 
   def processProduct(
     config: Config,
@@ -69,6 +65,7 @@ object Processor {
   /**
    * This is the main business logic for writing holiday stop to Zuora
    */
+
   def writeHolidayStopToZuora(
     config: Config,
     getSubscription: SubscriptionName => ZuoraHolidayResponse[Subscription],

@@ -19,7 +19,8 @@ libraryDependencies ++= Seq(
   "com.amazonaws" % "aws-java-sdk-s3" % "1.11.566",
   "org.slf4j" % "slf4j-api" % "1.7.25",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
+  "dev.zio" %% "zio" % "1.0.0-RC17"
 )
 
 assemblyMergeStrategyDiscardModuleInfo

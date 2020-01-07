@@ -53,7 +53,6 @@ object Handler extends Logging {
 
   def operationForEffects(
     response: Request => Response,
-    stage: Stage,
     fetchString: StringFromS3,
     backend: SttpBackend[Id, Nothing],
     idGenerator: => String
@@ -340,8 +339,7 @@ object Handler extends Logging {
     subscriptionName: SubscriptionName
   ): Either[HolidayError, Subscription] =
     for {
-      accessToken <- Zuora.accessTokenGetResponse(config.zuoraConfig, backend)
-      subscription <- Zuora.subscriptionGetResponse(config, accessToken, backend)(subscriptionName)
+      subscription <- ZuoraZioAdapter.getSubscription(subscriptionName)
     } yield subscription
 
   def stepsToWithdraw(req: ApiGatewayRequest, sfClient: SfClient): ApiResponse = {
