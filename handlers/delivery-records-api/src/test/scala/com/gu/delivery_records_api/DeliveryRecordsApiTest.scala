@@ -2,6 +2,7 @@ package com.gu.delivery_records_api
 
 import java.time.LocalDate
 
+import cats.data.OptionT
 import cats.effect.IO
 import com.gu.delivery_records_api.DeliveryRecordsService.deliveryRecordsQuery
 import com.gu.salesforce.sttp.SalesforceStub._
@@ -258,6 +259,41 @@ class DeliveryRecordsApiTest extends FlatSpec with Matchers with EitherValues {
     val salesforceBackendStub = SttpBackendStub[IO, Nothing](new CatsMonadError[IO]) //Auth call not stubbed
 
     DeliveryRecordsApiApp(config, salesforceBackendStub).value.unsafeRunSync().isLeft should be(true)
+  }
+
+  it should "put a list of delivery-problem credit requests" in {
+    val salesforceBackendStub = SttpBackendStub[IO, Nothing](new CatsMonadError[IO]).stubAuth(config, auth)
+    val app = createApp(salesforceBackendStub)
+
+    val response = app.run(Request(
+      method = Method.PUT,
+      Uri(path = s"/delivery-records/credit/$subscriptionNumber"),
+      headers = Headers.of(Header("x-salesforce-contact-id", buyerContactId))
+    )).value.unsafeRunSync().get
+
+    response.status.code should equal(204)
+  }
+  it should "fail to put a list of delivery-problem credit requests if no identity or contact header" in {
+    val salesforceBackendStub = SttpBackendStub[IO, Nothing](new CatsMonadError[IO]).stubAuth(config, auth)
+    val app = createApp(salesforceBackendStub)
+
+    val response = app.run(Request(
+      method = Method.PUT,
+      Uri(path = s"/delivery-records/credit/$subscriptionNumber"),
+    )).value.unsafeRunSync().get
+
+    response.status.code should equal(400)
+  }
+  it should "fail to put a list of delivery-problem credit requests if no delivery dates given" in {
+    val salesforceBackendStub = SttpBackendStub[IO, Nothing](new CatsMonadError[IO]).stubAuth(config, auth)
+    val app = createApp(salesforceBackendStub)
+
+    val response = app.run(Request(
+      method = Method.PUT,
+      Uri(path = s"/delivery-records/credit/$subscriptionNumber"),
+    )).value.unsafeRunSync().get
+
+    response.status.code should equal(400)
   }
 
   private def getBody[A: Decoder](response: Response[IO]) = {

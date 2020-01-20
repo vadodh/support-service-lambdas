@@ -3,7 +3,7 @@ package com.gu.delivery_records_api
 import java.time.LocalDate
 
 import cats.Monad
-import cats.data.EitherT
+import cats.data.{EitherT, NonEmptyList}
 import com.gu.salesforce.{Contact, RecordsWrapperCaseClass}
 import com.gu.salesforce.sttp.SalesforceClient
 import io.circe.generic.auto._
@@ -48,6 +48,12 @@ trait DeliveryRecordsService[F[_]] {
     optionalStartDate: Option[LocalDate],
     optionalEndDate: Option[LocalDate]
   ): EitherT[F, DeliveryRecordServiceError, DeliveryRecordsApiResponse]
+
+  def putDeliveryProblemCreditRequests(
+    subscriptionNumber: String,
+    contact: Contact,
+    dates: NonEmptyList[LocalDate]
+  ): EitherT[F, DeliveryRecordServiceError, Unit]
 }
 
 object DeliveryRecordsService {
@@ -116,6 +122,24 @@ object DeliveryRecordsService {
         ).toMap
       } yield DeliveryRecordsApiResponse(results, deliveryProblemMap)
 
+    override def putDeliveryProblemCreditRequests(
+      subscriptionNumber: String,
+      contact: Contact,
+      dates: NonEmptyList[LocalDate]
+    ): EitherT[F, DeliveryRecordServiceError, Unit] = {
+      val x = for {
+        queryResult <- queryForDeliveryRecords(
+          salesforceClient,
+          subscriptionNumber,
+          contact,
+          dates
+        )
+      } yield {
+
+      }
+      ???
+    }
+
     private def queryForDeliveryRecords(
       salesforceClient: SalesforceClient[F],
       subscriptionId: String,
@@ -125,6 +149,18 @@ object DeliveryRecordsService {
     ): EitherT[F, DeliveryRecordServiceError, RecordsWrapperCaseClass[SubscriptionRecordQueryResult]] = {
       salesforceClient.query[SubscriptionRecordQueryResult](
         deliveryRecordsQuery(contact, subscriptionId, optionalStartDate, optionalEndDate)
+      )
+        .leftMap(error => DeliveryRecordServiceGenericError(error.toString))
+    }
+
+    private def queryForDeliveryRecords(
+      salesforceClient: SalesforceClient[F],
+      subscriptionId: String,
+      contact: Contact,
+      dates: NonEmptyList[LocalDate]
+    ): EitherT[F, DeliveryRecordServiceError, RecordsWrapperCaseClass[SubscriptionRecordQueryResult]] = {
+      salesforceClient.query[SubscriptionRecordQueryResult](
+        deliveryRecordsQuery(contact, subscriptionId, dates)
       )
         .leftMap(error => DeliveryRecordServiceGenericError(error.toString))
     }
@@ -147,26 +183,48 @@ object DeliveryRecordsService {
     }
   }
 
-  // this is done with a nested query so one can distinguish between the contact not owning subscription and there
-  // simply being no delivery records, due to the hierarchical nature of the Salesforce response
   def deliveryRecordsQuery(
     contact: Contact,
     subscriptionNumber: String,
     optionalStartDate: Option[LocalDate],
     optionalEndDate: Option[LocalDate]
   ) =
+    deliveryRecordsQuery(
+      contact,
+      subscriptionNumber,
+      deliveryDateRangeFilter(optionalStartDate, optionalEndDate)
+    )
+
+  def deliveryRecordsQuery(
+    contact: Contact,
+    subscriptionNumber: String,
+    dates: NonEmptyList[LocalDate]
+  ) =
+    deliveryRecordsQuery(
+      contact,
+      subscriptionNumber,
+      deliveryDateListFilter(dates)
+    )
+
+  // this is done with a nested query so one can distinguish between the contact not owning subscription and there
+  // simply being no delivery records, due to the hierarchical nature of the Salesforce response
+  private def deliveryRecordsQuery(
+    contact: Contact,
+    subscriptionNumber: String,
+    dateFilter: String
+  ) =
     s"""SELECT (
        |    SELECT Delivery_Date__c, Delivery_Address__c, Delivery_Instructions__c, Has_Holiday_Stop__c, Address_Line_1__c,
        |           Address_Line_2__c, Address_Line_3__c, Address_Town__c, Address_Country__c, Address_Postcode__c,
        |           Case__c, Case__r.Id, Case__r.Subject, Case__r.Description, Case__r.Case_Closure_Reason__c
        |    FROM Delivery_Records__r
-       |    ${deliveryDateFilter(optionalStartDate, optionalEndDate)}
+       |    $dateFilter
        |    ORDER BY Delivery_Date__c DESC
        |)
        |FROM SF_Subscription__c WHERE Name = '${escapeString(subscriptionNumber)}'
        |                         AND ${contactToWhereClausePart(contact)}""".stripMargin
 
-  def deliveryDateFilter(optionalStartDate: Option[LocalDate], optionalEndDate: Option[LocalDate]) = {
+  def deliveryDateRangeFilter(optionalStartDate: Option[LocalDate], optionalEndDate: Option[LocalDate]) = {
     List(
       optionalStartDate.map(startDate => s"Delivery_Date__c >= $startDate "),
       optionalEndDate.map(endDate => s"Delivery_Date__c <= $endDate")
@@ -175,5 +233,13 @@ object DeliveryRecordsService {
         case nonEmpty => s" WHERE ${nonEmpty.mkString(" AND ")}"
       }
   }
-}
 
+  def deliveryDateListFilter(dates: NonEmptyList[LocalDate]): String =
+    dates match {
+      case NonEmptyList(head, Nil) => s" WHERE Delivery_Date__c = $head"
+      case list =>
+        list.foldLeft(" WHERE Delivery_Date__c IN (") { (acc, date) =>
+          s"$acc$date, "
+        }.stripSuffix(", ") + ")"
+    }
+}
