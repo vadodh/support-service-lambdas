@@ -24,6 +24,7 @@ import com.gu.util.resthttp.JsonHttp.StringHttpRequest
 import com.gu.util.resthttp.RestRequestMaker.BodyAsString
 import com.gu.util.resthttp.Types.ClientFailure
 import com.gu.util.resthttp.{HttpOp, JsonHttp}
+import com.gu.zuora.Zuora
 import com.gu.zuora.subscription._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, Id, SttpBackend}
 import okhttp3.{Request, Response}
@@ -191,7 +192,7 @@ object Handler extends Logging {
       potentialHolidayStops = issuesData.map { issueData =>
         PotentialHolidayStop(
           issueData.issueDate,
-          HolidayStopCredit(issueData.credit, issueData.nextBillingPeriodStartDate)
+          Credit(issueData.credit, issueData.nextBillingPeriodStartDate)
         )
       }
     } yield ApiGatewayResponse("200", PotentialHolidayStopsResponse(potentialHolidayStops))).apiResponse
@@ -356,7 +357,7 @@ object Handler extends Logging {
   ): Either[ApiFailure, Subscription] =
     for {
       accessToken <- Zuora.accessTokenGetResponse(config.zuoraConfig, backend)
-      subscription <- Zuora.subscriptionGetResponse(config, accessToken, backend)(subscriptionName)
+      subscription <- Zuora.subscriptionGetResponse(config.zuoraConfig, accessToken, backend)(subscriptionName)
     } yield subscription
 
   def stepsToWithdraw(req: ApiGatewayRequest, sfClient: SfClient): ApiResponse = {

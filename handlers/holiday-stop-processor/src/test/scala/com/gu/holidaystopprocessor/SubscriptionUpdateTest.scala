@@ -41,8 +41,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
           chargeOverrides = List(
             ChargeOverride(
               productRatePlanChargeId = creditProduct.productRatePlanChargeId,
-              HolidayStart__c = stoppedPublicationDate.value,
-              HolidayEnd__c = stoppedPublicationDate.value,
+              HolidayStart__c = Some(stoppedPublicationDate.value),
+              HolidayEnd__c = Some(stoppedPublicationDate.value),
               price = -3.24
             )
           )
@@ -75,8 +75,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
         chargeOverrides = List(
           ChargeOverride(
             creditProduct.productRatePlanChargeId,
-            HolidayStart__c = stoppedPublicationDate.value,
-            HolidayEnd__c = stoppedPublicationDate.value,
+            HolidayStart__c = Some(stoppedPublicationDate.value),
+            HolidayEnd__c = Some(stoppedPublicationDate.value),
             price = -3.24
           )
         )
@@ -109,8 +109,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
         chargeOverrides = List(
           ChargeOverride(
             creditProduct.productRatePlanChargeId,
-            HolidayStart__c = stoppedPublicationDate.value,
-            HolidayEnd__c = stoppedPublicationDate.value,
+            HolidayStart__c = Some(stoppedPublicationDate.value),
+            HolidayEnd__c = Some(stoppedPublicationDate.value),
             price = -3.24
           )
         )
