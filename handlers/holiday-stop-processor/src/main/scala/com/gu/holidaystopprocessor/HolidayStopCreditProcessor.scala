@@ -34,18 +34,15 @@ object HolidayStopCreditProcessor {
           GuardianWeekly,
         )
         .map { productType =>
-          Processor.processProduct(
-            HolidayCreditProduct.forStage(stage),
-            Salesforce.holidayStopRequests(config.sfConfig),
-            fulfilmentDatesFetcher,
-            processDateOverride,
+          Processor.processProduct(HolidayStopProductCreditRequest(
+            stage,
+            config,
+            zuoraAccessToken,
+            backend,
             productType,
-            Zuora.subscriptionGetResponse(config, zuoraAccessToken, backend),
-            SubscriptionUpdate.forHolidayStop,
-            Zuora.subscriptionUpdateResponse(config, zuoraAccessToken, backend),
-            ZuoraHolidayCreditAddResult.apply,
-            Salesforce.holidayStopUpdateResponse(config.sfConfig)
-          )
+            fulfilmentDatesFetcher,
+            processDateOverride
+          ))
         }
     }
 }

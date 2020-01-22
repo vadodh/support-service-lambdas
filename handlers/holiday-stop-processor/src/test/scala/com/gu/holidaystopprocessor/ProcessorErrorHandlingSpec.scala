@@ -4,13 +4,15 @@ import java.time.temporal.TemporalAdjusters
 import java.time.{DayOfWeek, LocalDate}
 
 import cats.implicits._
-import com.gu.creditprocessor.Processor
+import com.gu.creditprocessor.{Processor, ProductCreditRequest}
 import com.gu.fulfilmentdates.{FulfilmentDates, FulfilmentDatesFetcher, FulfilmentDatesFetcherError}
-import com.gu.holiday_stops.Fixtures
+import com.gu.holiday_stops.{AccessToken, Config, Fixtures}
 import com.gu.salesforce.holiday_stops.SalesforceHolidayStopRequestsDetail.HolidayStopRequestsDetail
+import com.gu.util.config.Stage
 import com.gu.zuora.ZuoraProductTypes
-import com.gu.zuora.ZuoraProductTypes.ZuoraProductType
+import com.gu.zuora.ZuoraProductTypes.{GuardianWeekly, ZuoraProductType}
 import com.gu.zuora.subscription._
+import com.softwaremill.sttp.{Id, SttpBackend}
 import org.scalatest._
 
 /**
@@ -54,6 +56,31 @@ class ProcessorErrorHandlingSpec extends FlatSpec with Matchers with OptionValue
 
     val writeHolidayStopsToSalesforce: List[ZuoraHolidayCreditAddResult] => Either[SalesforceApiFailure, Unit] = _ => Right(())
 
+    val x = new ProductCreditRequest[HolidayStopRequestsDetail, ZuoraHolidayCreditAddResult]{
+      val fulfilmentDatesFetcher = fulfilmentDatesFetcher
+      val processOverrideDate = None
+      val productType = GuardianWeekly
+      val creditProduct = creditProduct
+      def getCreditRequestsFromSalesforce(
+        productType: ZuoraProductType,
+        affectedDates: List[LocalDate]
+      ) = holidayStopRequestsFromSalesforce(productType,affectedDates)
+      def getSubscription(subscriptionName: SubscriptionName): ZuoraApiResponse[Subscription] = ???
+      def updateToApply(
+        creditProduct: CreditProduct,
+        subscription: Subscription,
+        affectedDate: AffectedPublicationDate
+      ): ZuoraApiResponse[SubscriptionUpdate] = ???
+      def updateSubscription(
+        subscription: Subscription,
+        update: SubscriptionUpdate
+      ): ZuoraApiResponse[Unit] = ???
+      def resultOfZuoraCreditAdd(
+        request: Request,
+        ratePlanCharge: RatePlanCharge
+      ): Result = ???
+      def writeCreditResultsToSalesforce(results: List[Result]): SalesforceApiResponse[Unit] = ???
+    }
     val result = Processor.processProduct(
       creditProduct,
       holidayStopRequestsFromSalesforce,
