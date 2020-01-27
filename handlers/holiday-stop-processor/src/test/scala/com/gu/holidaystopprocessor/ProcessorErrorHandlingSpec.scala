@@ -61,7 +61,7 @@ class ProcessorErrorHandlingSpec extends FlatSpec with Matchers with OptionValue
       None,
       ZuoraProductTypes.GuardianWeekly,
       getSubscription,
-      SubscriptionUpdate.forHolidayStop,
+      SubscriptionUpdate.apply,
       updateSubscription,
       ZuoraHolidayCreditAddResult.apply,
       writeHolidayStopsToSalesforce
@@ -91,7 +91,7 @@ class ProcessorErrorHandlingSpec extends FlatSpec with Matchers with OptionValue
       None,
       ZuoraProductTypes.GuardianWeekly,
       getSubscription,
-      SubscriptionUpdate.forHolidayStop,
+      SubscriptionUpdate.apply,
       updateSubscription,
       ZuoraHolidayCreditAddResult.apply,
       writeHolidayStopsToSalesforce
@@ -121,7 +121,7 @@ class ProcessorErrorHandlingSpec extends FlatSpec with Matchers with OptionValue
       None,
       ZuoraProductTypes.GuardianWeekly,
       getSubscription,
-      SubscriptionUpdate.forHolidayStop,
+      SubscriptionUpdate.apply,
       updateSubscription,
       ZuoraHolidayCreditAddResult.apply,
       writeHolidayStopsToSalesforce
@@ -150,7 +150,7 @@ class ProcessorErrorHandlingSpec extends FlatSpec with Matchers with OptionValue
       None,
       ZuoraProductTypes.GuardianWeekly,
       getSubscription,
-      SubscriptionUpdate.forHolidayStop,
+      SubscriptionUpdate.apply,
       updateSubscription,
       ZuoraHolidayCreditAddResult.apply,
       writeHolidayStopsToSalesforce

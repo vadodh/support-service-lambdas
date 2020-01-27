@@ -24,7 +24,7 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
       effectiveStartDate = effectiveStartDate
     )
 
-    val update = SubscriptionUpdate.forHolidayStop(
+    val update = SubscriptionUpdate.apply(
       creditProduct,
       subscription = subscription,
       stoppedPublicationDate
@@ -41,8 +41,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
           chargeOverrides = List(
             ChargeOverride(
               productRatePlanChargeId = creditProduct.productRatePlanChargeId,
-              HolidayStart__c = Some(stoppedPublicationDate.value),
-              HolidayEnd__c = Some(stoppedPublicationDate.value),
+              HolidayStart__c = stoppedPublicationDate.value,
+              HolidayEnd__c = stoppedPublicationDate.value,
               price = -3.24
             )
           )
@@ -59,7 +59,7 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
       billingPeriod = "Quarter",
       effectiveStartDate = effectiveStartDate
     )
-    val update = SubscriptionUpdate.forHolidayStop(
+    val update = SubscriptionUpdate.apply(
       creditProduct,
       subscription = subscription,
       stoppedPublicationDate
@@ -75,8 +75,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
         chargeOverrides = List(
           ChargeOverride(
             creditProduct.productRatePlanChargeId,
-            HolidayStart__c = Some(stoppedPublicationDate.value),
-            HolidayEnd__c = Some(stoppedPublicationDate.value),
+            HolidayStart__c = stoppedPublicationDate.value,
+            HolidayEnd__c = stoppedPublicationDate.value,
             price = -3.24
           )
         )
@@ -93,7 +93,7 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
       chargedThroughDate = Some(LocalDate.of(2020, 8, 2)),
       effectiveStartDate = effectiveStartDate
     )
-    val update = SubscriptionUpdate.forHolidayStop(
+    val update = SubscriptionUpdate.apply(
       creditProduct,
       subscription = subscription,
       stoppedPublicationDate
@@ -109,8 +109,8 @@ class SubscriptionUpdateTest extends FlatSpec with Matchers with EitherValues {
         chargeOverrides = List(
           ChargeOverride(
             creditProduct.productRatePlanChargeId,
-            HolidayStart__c = Some(stoppedPublicationDate.value),
-            HolidayEnd__c = Some(stoppedPublicationDate.value),
+            HolidayStart__c = stoppedPublicationDate.value,
+            HolidayEnd__c = stoppedPublicationDate.value,
             price = -3.24
           )
         )
