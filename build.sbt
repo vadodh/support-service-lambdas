@@ -336,14 +336,16 @@ lazy val `delivery-problem-credit-processor` =
   all(project in file("handlers/delivery-problem-credit-processor"))
     .dependsOn(
       `credit-processor`,
-      `salesforce-client`,
+      `salesforce-client`, // TODO remove
+      `salesforce-sttp-client`,
       effects
     )
     .settings(
       libraryDependencies ++= Seq(
         scalaLambda,
         circe,
-        zio
+        zio,
+        sttpAsycHttpClientBackendCats
       )
     )
     .enablePlugins(RiffRaffArtifact)
