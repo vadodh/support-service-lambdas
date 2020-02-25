@@ -6,9 +6,9 @@ import com.gu.creditprocessor.ProcessResult
 import com.gu.effects.GetFromS3
 import com.gu.holiday_stops.{ConfigLive, Configuration}
 import com.gu.holidaystopprocessor.HolidayStopCreditProcessor.processAllProducts
-import com.softwaremill.sttp.HttpURLConnectionBackend
-import zio.console.Console
+import sttp.client.HttpURLConnectionBackend
 import zio._
+import zio.console.Console
 
 // This is just for functional testing locally.
 object StandaloneApp extends App {

@@ -8,7 +8,7 @@ object Dependencies {
   val awsVersion = "1.11.574"
 
   val circeVersion = "0.11.1"
-  val sttpVersion = "1.5.17"
+  val sttpVersion = "2.0.0"
   val http4sVersion = "0.20.3"
   val catsVersion = "1.6.1"
   val catsEffectVersion = "1.3.1"
@@ -32,10 +32,10 @@ object Dependencies {
   val circeParser = "io.circe" %% "circe-parser" % circeVersion
   val circeJava8 = "io.circe" %% "circe-java8" % circeVersion
   val circeConfig =  "io.circe" %% "circe-config" % "0.6.1"
-  val sttp = "com.softwaremill.sttp" %% "core" % sttpVersion
-  val sttpCirce = "com.softwaremill.sttp" %% "circe" % sttpVersion
-  val sttpCats = "com.softwaremill.sttp" %% "cats" % sttpVersion
-  val sttpAsycHttpClientBackendCats = "com.softwaremill.sttp" %% "async-http-client-backend-cats" % sttpVersion
+  val sttp = "com.softwaremill.sttp.client" %% "core" % sttpVersion
+  val sttpCirce = "com.softwaremill.sttp.client" %% "circe" % sttpVersion
+  val sttpCats = "com.softwaremill.sttp.client" %% "cats" % sttpVersion
+  val sttpAsycHttpClientBackendCats = "com.softwaremill.sttp.client" %% "async-http-client-backend-cats" % sttpVersion
   val mouse = "org.typelevel" %% "mouse" % "0.23" // can be removed once we move to Scala 2.13 (native 'tap')
   val enumeratum = "com.beachape" %% "enumeratum" % "1.5.13"
   val http4sLambda = "io.github.howardjohn" %% "http4s-lambda" % "0.4.0"

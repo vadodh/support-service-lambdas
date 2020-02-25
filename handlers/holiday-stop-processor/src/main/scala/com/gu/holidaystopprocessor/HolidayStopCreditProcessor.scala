@@ -10,8 +10,8 @@ import com.gu.salesforce.holiday_stops.SalesforceHolidayStopRequestsDetail.Holid
 import com.gu.util.config.Stage
 import com.gu.zuora.Zuora
 import com.gu.zuora.ZuoraProductTypes.{GuardianWeekly, NewspaperHomeDelivery, NewspaperVoucherBook}
-import com.gu.zuora.subscription.{CreditProduct, OverallFailure, Subscription, SubscriptionUpdate, ZuoraAccount}
-import com.softwaremill.sttp.{Id, SttpBackend}
+import com.gu.zuora.subscription._
+import sttp.client.{Identity, NothingT, SttpBackend}
 
 import scala.util.Try
 
@@ -20,7 +20,7 @@ object HolidayStopCreditProcessor {
   def processAllProducts(
     config: Config,
     processDateOverride: Option[LocalDate],
-    backend: SttpBackend[Id, Nothing],
+    backend: SttpBackend[Identity, Nothing, NothingT],
     fetchFromS3: S3Location => Try[String]
   ): List[ProcessResult[ZuoraHolidayCreditAddResult]] =
     Zuora.accessTokenGetResponse(config.zuoraConfig, backend) match {

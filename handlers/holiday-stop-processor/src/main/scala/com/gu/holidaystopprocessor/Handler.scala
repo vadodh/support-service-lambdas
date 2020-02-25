@@ -7,10 +7,10 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.gu.creditprocessor.ProcessResult
 import com.gu.effects.GetFromS3
 import com.gu.holiday_stops.{ConfigLive, Configuration}
-import com.softwaremill.sttp.HttpURLConnectionBackend
 import io.circe.generic.auto._
 import io.github.mkotsur.aws.handler.Lambda
 import io.github.mkotsur.aws.handler.Lambda._
+import sttp.client.HttpURLConnectionBackend
 import zio.console.Console
 import zio.{DefaultRuntime, RIO, console}
 

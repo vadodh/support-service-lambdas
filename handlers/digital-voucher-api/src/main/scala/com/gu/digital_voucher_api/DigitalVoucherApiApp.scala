@@ -1,6 +1,18 @@
 package com.gu.digital_voucher_api
 
 import cats.data.EitherT
+import cats.effect.{ContextShift, IO}
+import cats.implicits._
+import com.gu.AppIdentity
+import com.gu.digital_voucher_api.imovo.ImovoClient
+import com.typesafe.scalalogging.LazyLogging
+import org.http4s.HttpRoutes
+import org.http4s.server.middleware.Logger
+import org.http4s.util.CaseInsensitiveString
+import sttp.client.SttpBackend
+import sttp.client.asynchttpclient.WebSocketHandler
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import cats.data.EitherT
 import cats.implicits._
 import cats.effect.{ContextShift, IO}
 import com.gu.AppIdentity
@@ -11,6 +23,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.http4s.HttpRoutes
 import org.http4s.server.middleware.Logger
 import org.http4s.util.CaseInsensitiveString
+import sttp.client.monad._
 
 final case class DigitalVoucherApiError(message: String)
 
@@ -19,10 +32,11 @@ object DigitalVoucherApiApp extends LazyLogging {
   private implicit val cs: ContextShift[IO] = IO.contextShift(scala.concurrent.ExecutionContext.global)
 
   def apply(appIdentity: AppIdentity): EitherT[IO, DigitalVoucherApiError, HttpRoutes[IO]] = {
-    DigitalVoucherApiApp(appIdentity, AsyncHttpClientCatsBackend[cats.effect.IO]())
+    val value: SttpBackend[IO, Nothing, Nothing] = AsyncHttpClientCatsBackend()
+    DigitalVoucherApiApp(appIdentity, value)
   }
 
-  def apply[S](appIdentity: AppIdentity, backend: SttpBackend[IO, S]): EitherT[IO, DigitalVoucherApiError, HttpRoutes[IO]] = {
+  def apply(appIdentity: AppIdentity, backend: SttpBackend[IO, Nothing, Nothing]): EitherT[IO, DigitalVoucherApiError, HttpRoutes[IO]] = {
     for {
       config <- ConfigLoader
         .loadConfig[IO](appIdentity: AppIdentity)

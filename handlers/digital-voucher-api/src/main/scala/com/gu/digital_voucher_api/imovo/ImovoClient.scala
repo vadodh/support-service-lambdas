@@ -8,12 +8,13 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.gu.digital_voucher_api.{CampaignCode, ImovoClientException, SfSubscriptionId}
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.circe._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.{Decoder, Encoder}
+import sttp.client._
+import sttp.client.circe._
+import sttp.model.{Method, Uri}
 
 case class ImovoVoucherResponse(voucherCode: String, successfulRequest: Boolean)
 case class ImovoErrorResponse(errorMessages: List[String], successfulRequest: Boolean)
@@ -31,8 +32,8 @@ trait ImovoClient[F[_]] {
 }
 
 object ImovoClient extends LazyLogging {
-  def apply[F[_]: Sync, S](backend: SttpBackend[F, S], baseUrl: String, apiKey: String): EitherT[F, ImovoClientException, ImovoClient[F]] = {
-    implicit val b = backend
+  def apply[F[_]: Sync, S](backend: SttpBackend[F, S, NothingT], baseUrl: String, apiKey: String): EitherT[F, ImovoClientException, ImovoClient[F]] = {
+    implicit val b: SttpBackend[F, S, NothingT] = backend
 
     def sendAuthenticatedRequest[A: Decoder, B: Encoder](
       apiKey: String,
@@ -41,11 +42,9 @@ object ImovoClient extends LazyLogging {
       body: Option[B]
     ): EitherT[F, ImovoClientException, A] = {
 
-      val requestWithoutBody = sttp
+      val requestWithoutBody = basicRequest
         .method(method, uri)
-        .headers(
-          "X-API-KEY" -> apiKey
-        )
+        .header("X-API-KEY", apiKey)
 
       val request = body.fold(requestWithoutBody)(b => requestWithoutBody.body(b))
 
@@ -56,35 +55,35 @@ object ImovoClient extends LazyLogging {
     }
 
     def decodeResponse[A: Decoder](
-      request: Request[String, S],
-      response: Response[String]
+      request: RequestT[Identity, Either[String, String], Nothing],
+      response: Response[Either[String, String]]
     ): Either[ImovoClientException, A] = {
-      response
-        .body
+      val body = response.body
+      body
         .leftMap(
           errorBody =>
             ImovoClientException(
-              s"Request ${request.method.m} ${request.uri.toString()} failed returning a status ${response.code} with body: ${errorBody}"
+              s"Request ${request.method} ${request.uri.toString()} failed returning a status ${response.code} with body: ${errorBody}"
             )
         )
         .flatMap { successBody =>
           for {
             parsedResponse <- parse(successBody)
-              .leftMap(e => ImovoClientException(s"Request ${request.method.m} ${request.uri.toString()} failed to parse response ($successBody): $e"))
+              .leftMap(e => ImovoClientException(s"Request ${request.method} ${request.uri.toString()} failed to parse response ($successBody): $e"))
 
             successFlag <- parsedResponse
               .hcursor
               .downField("successfulRequest")
               .as[Boolean]
-              .leftMap(e => ImovoClientException(s"Request ${request.method.m} ${request.uri.toString()} had a response which did not contain the successfulRequest flag ($successBody): $e"))
+              .leftMap(e => ImovoClientException(s"Request ${request.method} ${request.uri.toString()} had a response which did not contain the successfulRequest flag ($successBody): $e"))
 
             response <- {
               if (successFlag) {
                 parsedResponse
                   .as[A]
-                  .leftMap(e => ImovoClientException(s"Request ${request.method.m} ${request.uri.toString()} failed to decode response ($successBody): $e"))
+                  .leftMap(e => ImovoClientException(s"Request ${request.method} ${request.uri.toString()} failed to decode response ($successBody): $e"))
               } else {
-                ImovoClientException(s"Request ${request.method.m} ${request.uri.toString()} failed with response ($successBody)").asLeft[A]
+                ImovoClientException(s"Request ${request.method} ${request.uri.toString()} failed with response ($successBody)").asLeft[A]
               }
             }
           } yield response

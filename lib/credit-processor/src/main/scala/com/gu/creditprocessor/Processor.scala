@@ -7,8 +7,8 @@ import com.gu.fulfilmentdates.FulfilmentDatesFetcher
 import com.gu.zuora.ZuoraProductTypes.ZuoraProductType
 import com.gu.zuora.subscription._
 import com.gu.zuora.{AccessToken, Zuora, ZuoraConfig}
-import com.softwaremill.sttp.{Id, SttpBackend}
 import org.slf4j.LoggerFactory
+import sttp.client._
 
 object Processor {
   private val logger = LoggerFactory.getLogger(getClass)
@@ -16,7 +16,7 @@ object Processor {
   def processLiveProduct[Request <: CreditRequest, Result <: ZuoraCreditAddResult](
     config: ZuoraConfig,
     zuoraAccessToken: AccessToken,
-    sttpBackend: SttpBackend[Id, Nothing],
+    sttpBackend: SttpBackend[Identity, Nothing, NothingT],
     creditProduct: CreditProduct,
     getCreditRequestsFromSalesforce: (ZuoraProductType, List[LocalDate]) => SalesforceApiResponse[List[Request]],
     fulfilmentDatesFetcher: FulfilmentDatesFetcher,
