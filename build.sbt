@@ -209,7 +209,9 @@ lazy val `zuora-core` = all(project in file("lib/zuora-core"))
       sttpCirce,
       scalatest,
       diffx,
-      mouse
+      mouse,
+      zio,
+      sttpBackendZio
     ) ++ logging
   )
 
